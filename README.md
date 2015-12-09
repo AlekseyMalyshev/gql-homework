@@ -7,25 +7,37 @@
 query {
   Students {
     _id,
-    firstName,
-    lastName,
+    fullName,
     gender
   }
 }
 ```
-
+*Specific student information*
+```json
+query {
+  students(filter: "Andrew") {
+    fullName,
+    GPA,
+    level,
+    courses {
+      name,
+      instructor {
+        lastName
+      }
+    }
+  }
+}
+```
 *Student with a specific id:*
 ```json
 query {
   Student(_id: 1) {
-    firstName,
-    lastName,
+    fullName,
     gender
   }
 }
 ```
 *Get a list of cources*
-
 ```json
 query {
   Courses {
@@ -37,22 +49,18 @@ query {
   }
 }
 ```
-
 *All grades for all courses*
-
 ```json
 query {
   Grades {
     course {
       name,
       instructor {
-        firstName,
-        lastName
+        fullName
       }
     }
     student {
-      firstName,
-      lastName
+      fullName
     }
     grade
   }
@@ -63,8 +71,7 @@ query {
 query {
   GradesByCourse(courseId: 1) {
     student {
-      firstName,
-      lastName
+      fullName
     },
     grade
   }
@@ -75,15 +82,13 @@ query {
 mutation {
   gradeStudent(studentId: 1, courseId: 1, grade: A) {
     student {
-      firstName,
-      lastName,
+      fullName,
       gender
     },
     course {
       name,
       instructor {
-        firstName,
-        lastName,
+        fullName,
         gender
       }
     },

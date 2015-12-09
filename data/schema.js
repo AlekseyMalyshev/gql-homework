@@ -1,6 +1,7 @@
 import {
   GraphQLBoolean,
   GraphQLEnumType,
+  GraphQLFloat,
   GraphQLID,
   GraphQLInt,
   GraphQLList,
@@ -30,21 +31,24 @@ let students = [{
   firstName: 'Andrew',
   lastName: 'Green',
   age: 16,
-  gender: 1
+  gender: 1,
+  level: 4
 },
 {
   _id: 2,
   firstName: 'Michael',
   lastName: 'Brown',
   age: 17,
-  gender: 1
+  gender: 1,
+  level: 4
 },
 {
   _id: 3,
   firstName: 'Theresa',
   lastName: 'Samers',
   age: 17,
-  gender: 0
+  gender: 0,
+  level: 4
 }];
 
 let courses = [{
@@ -140,19 +144,23 @@ let personType = new GraphQLObjectType({
     firstName: {
       type: GraphQLString,
       resolve: (obj) => obj.firstName
-     },
+    },
     lastName: {
       type: GraphQLString,
       resolve: (obj) => obj.lastName
-     },
+    },
+    fullName: {
+      type: GraphQLString,
+      resolve: (obj) => obj.firstName + ' ' + obj.lastName
+    },
     age: {
       type: GraphQLInt,
       resolve: (obj) => obj.age
-     },
+    },
     gender: {
       type: genderType,
       resolve: (obj) => obj.gender
-     }
+    }
   })
 });
 
@@ -167,23 +175,56 @@ let studentType = new GraphQLObjectType({
     firstName: {
       type: GraphQLString,
       resolve: (obj) => obj.firstName
-     },
+    },
     lastName: {
       type: GraphQLString,
       resolve: (obj) => obj.lastName
-     },
+    },
+    fullName: {
+      type: GraphQLString,
+      resolve: (obj) => obj.firstName + ' ' + obj.lastName
+    },
+    GPA: {
+      type: GraphQLFloat,
+      resolve: (obj) => {
+        let count = 0;
+        return grades.reduce((sum, v) => {
+          if (v.student == obj._id) {
+            ++count;
+            return sum + v.grade;
+          }
+          else {
+            return sum;
+          }
+        }, 0) / count;
+      }
+    },
+    courses: {
+      type: new GraphQLList(courseType),
+      resolve: (obj) => {
+        let result = grades.filter((v) => v.student == obj._id).map((v) => {
+          for (var i = 0; i < courses.length; i++) {
+            if (courses[i]._id == v.course) {
+              return courses[i];
+            }
+          };
+          return undefined;
+        });
+        return result;
+      }
+    },
     age: {
       type: GraphQLInt,
       resolve: (obj) => obj.age
-     },
+    },
     gender: {
       type: genderType,
       resolve: (obj) => obj.gender
-     },
+    },
     level: {
       type: levelType,
       resolve: (obj) => obj.level
-     }
+    }
   })
 });
 
@@ -198,11 +239,11 @@ let courseType = new GraphQLObjectType({
     name: {
       type: GraphQLString,
       resolve: (obj) => obj.name
-     },
+    },
     instructor: {
       type: personType,
       resolve: (obj) => findById(instructors, obj.instructor)
-     }
+    }
   })
 });
 
@@ -212,15 +253,15 @@ let gradeType = new GraphQLObjectType({
     student: {
       type: studentType,
       resolve: (obj) => findById(students, obj.student)
-     },
+    },
     course: {
       type: courseType,
       resolve: (obj) => findById(courses, obj.course)
-     },
+    },
     grade: {
       type: gradeValueType,
       resolve: (obj) => obj.grade
-     }
+    }
   })
 });
 
@@ -235,6 +276,13 @@ let schema = new GraphQLSchema({
       Students: {
         type: new GraphQLList(studentType),
         resolve: () => students
+      },
+      students: {
+        type: new GraphQLList(studentType),
+        args: {
+          filter: { type: GraphQLString }
+        },
+        resolve: (_, {filter}) => students.filter((v) => v.firstName == filter)
       },
       Student: {
         type: studentType,
