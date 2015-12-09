@@ -282,7 +282,7 @@ let schema = new GraphQLSchema({
         args: {
           filter: { type: GraphQLString }
         },
-        resolve: (_, {filter}) => students.filter((v) => v.firstName == filter)
+        resolve: (_, {filter}) => students.filter((v) => !filter || v.firstName == filter)
       },
       Student: {
         type: studentType,
